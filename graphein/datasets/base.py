@@ -137,6 +137,13 @@ class AbstractClassificationDataset(ABC):
 
     @staticmethod
     def get_graph_labels(df) -> List[str]:
+        """Returns list of interactors (species that the protein binds)
+
+        :param df: Dataset dataframe
+        :type df: pd.DataFrame
+        :return: List of interactors
+        :rtype: List[str]
+        """
         return list(df["interactor"])
 
     @staticmethod
@@ -215,11 +222,19 @@ class AbstractClassificationDataset(ABC):
         try:
             result = func(pdb_code=args[0], chain_selection=args[1])
             return result
-        except:
+        except Exception as ex:
             log.info(
                 f"Graph construction error (PDB={args[0]})! {traceback.format_exc()}"
             )
-            self.bad_pdbs.append(args[0])
+            log.info(ex)
+            return None
+
+    def _validate_node_label_lengths(self):
+        for i, g in enumerate(self.graphs):
+            print(self.node_labels[i])
+            assert g.number_of_nodes() == len(
+                self.node_labels[i]
+            ), f"Number of nodes in {g.name} do not match length of node labels ({len(self.node_labels[i])}"
 
     def download_pdbs(self, path: str):
         """
