@@ -1,0 +1,21 @@
+representation_mode: "protein_graph"
+in_dir: "."
+in_file: "."
+out_dir: "."
+out_format: "."
+protein_graph_config:
+  granularity: "CA"
+  keep_hets: false
+  insertions: false
+  pdb_dir: "../examples/pdbs"
+  verbose: false
+  exclude_waters: true
+  deprotonate: false
+  get_contacts_config:
+    get_contacts_path: None
+    contacts_dir: "."
+    pdb_dir: "."
+    granularity: "CA"
+model_config: false
+
+

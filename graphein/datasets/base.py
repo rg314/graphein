@@ -1,4 +1,4 @@
-"""Base class for working with the PROTEINS_X datasets"""
+"""Base class for working with the PROTEINS_X datasets."""
 import logging
 import multiprocessing
 
@@ -222,7 +222,7 @@ class AbstractClassificationDataset(ABC):
         try:
             result = func(pdb_code=args[0], chain_selection=args[1])
             return result
-        except Exception as ex:
+        except Exception:
             log.info(
                 f"Graph construction error (PDB={args[0]})! {traceback.format_exc()}"
             )
