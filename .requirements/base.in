@@ -15,3 +15,4 @@ tqdm
 typing_extensions
 wget
 xarray
+pytorch_lightning

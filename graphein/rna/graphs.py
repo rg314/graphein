@@ -8,7 +8,12 @@
 import logging
 from typing import Callable, Dict, List, Optional
 
+from biopandas.pdb import PandasPdb
 import networkx as nx
+
+import pandas as pd
+
+from graphein.protein.utils import get_protein_name_from_filename
 
 from graphein.utils.utils import (
     annotate_edge_metadata,
@@ -116,10 +121,63 @@ def validate_dotbracket(db: str) -> str:
         )
 
 
+def read_pdb_to_dataframe(
+    pdb_path: Optional[str] = None,
+    pdb_code: Optional[str] = None,
+    verbose: bool = False,
+    granularity: str = "CA",
+) -> pd.DataFrame:
+    """
+    Reads PDB file to PandasPDB object.
+
+    Returns `atomic_df`, which is a dataframe enumerating all atoms and their cartesian coordinates in 3D space. Also
+        contains associated metadata.
+
+    :param pdb_path: path to PDB file. Defaults to None.
+    :type pdb_path: str, optional
+    :param pdb_code: 4-character PDB accession. Defaults to None.
+    :type pdb_code: str, optional
+    :param verbose: print dataframe?
+    :type verbose: bool
+    :param granularity: Specifies granularity of dataframe. See graphein.protein.config.ProteinGraphConfig for further
+        details.
+    :type granularity: str
+    :returns: Pd.DataFrame containing protein structure
+    :rtype: pd.DataFrame
+    """
+    if pdb_code is None and pdb_path is None:
+        raise NameError("One of pdb_code or pdb_path must be specified!")
+
+    atomic_df = (
+        PandasPdb().read_pdb(pdb_path)
+        if pdb_path is not None
+        else PandasPdb().fetch_pdb(pdb_code)
+    )
+
+    # Assign Node IDs to dataframes
+    atomic_df.df["ATOM"]["node_id"] = (
+        atomic_df.df["ATOM"]["chain_id"].apply(str)
+        + ":"
+        + atomic_df.df["ATOM"]["residue_name"]
+        + ":"
+        + atomic_df.df["ATOM"]["residue_number"].apply(str)
+    )
+    if granularity == "atom":
+        atomic_df.df["ATOM"]["node_id"] = (
+            atomic_df.df["ATOM"]["node_id"]
+            + ":"
+            + atomic_df.df["ATOM"]["atom_name"]
+        )
+    if verbose:
+        print(atomic_df)
+    return atomic_df
+
 def construct_rna_graph(
-    dotbracket: Optional[str],
-    sequence: Optional[str],
-    edge_construction_funcs: List[Callable],
+    sequence: Optional[str] = None,
+    dotbracket: Optional[str] = None,
+    pdb_path: Optional[str] = None,
+    pdb_code: Optional[str] = None,
+    edge_construction_funcs: List[Callable]=None,
     edge_annotation_funcs: Optional[List[Callable]] = None,
     node_annotation_funcs: Optional[List[Callable]] = None,
     graph_annotation_funcs: Optional[List[Callable]] = None,
@@ -142,6 +200,23 @@ def construct_rna_graph(
     :return: nx.Graph of RNA secondary structure
     :rtype: nx.Graph
     """
+
+    # Get name from pdb_file is no pdb_code is provided
+    if pdb_path and (pdb_code is None):
+        pdb_code = get_protein_name_from_filename(pdb_path)
+
+    # currently testing
+    # raw_df = read_pdb_to_dataframe(
+        # pdb_path,
+        # pdb_code,
+        # verbose=config.verbose,
+        # granularity=config.granularity,
+    )
+    # protein_df = process_dataframe(
+        # raw_df, chain_selection=chain_selection, granularity=config.granularity
+    # )
+
+
     G = nx.Graph()
 
     # Build node IDs first.

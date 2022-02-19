@@ -2,6 +2,8 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import text
 
+from pathlib import Path
+
 from graphein.rna.edges import (
     add_all_dotbracket_edges,
     add_base_pairing_interactions,
@@ -56,3 +58,22 @@ def test_construct_rna_graph():
 
     assert phosphodiesters == len(TEST_SEQUENCE) - 1
     assert bp == TEST_DOTBRACKET.count("(")
+
+
+def test_pdb_rna_graph():
+    rna = construct_rna_graph(
+        pdb_code="2jyf"
+    )
+
+def test_construct_graph():
+    """Example-based test that graph construction works correctly.
+
+    Uses 4hhb PDB file as an example test case.
+    """
+    file_path = Path(__file__).parent / "test_data/2jyf.pdb"
+    G = construct_rna_graph(pdb_path=str(file_path))
+
+
+if __name__ == "__main__":
+    test_pdb_rna_graph()
+    test_construct_graph()
